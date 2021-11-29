@@ -5,6 +5,8 @@ import { Button } from "@mui/material";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import "./SignIn.css";
 import Footer from "../../common/footer/Footer";
+import { useNavigate, Link } from "react-router-dom";
+
 
 const SET_EMAIL = "SET_EMAIL";
 const SET_PASSWORD = "SET_PASSWORD";
@@ -24,15 +26,16 @@ const reducer = (state, action)=>{
   switch(action.type){
     case SET_EMAIL : return  {...state, email : action.value};
     case SET_PASSWORD : return  {...state, password : action.value};
-    case SET_EMAIL_ERROR : return {...state, emailError : action.value, emailHelperText : "Required"};
-    case SET_PASSWORD_ERROR : return {...state, passwordError : action.value, passwordHelperText : "Required"};
+    case SET_EMAIL_ERROR : return {...state, emailError : action.value, emailHelperText : action.text};
+    case SET_PASSWORD_ERROR : return {...state, passwordError : action.value, passwordHelperText : action.text};
     default : return state;
   }
 }
 
-function SignIn(){
+function SignIn({isLoggedIn, setLogin, isAdmin, setAdmin}){
 
   const [formData, dispatch] = useReducer(reducer, initialState);
+  const navigate = useNavigate();
 
   const handleChange=(event)=>{
     const {name, value} = event.target;
@@ -73,8 +76,21 @@ function SignIn(){
     }
     try{
       fetch('http://localhost:8000/api/auth/login', options)
-        .then(response=>response.json())
-        .then(res=>console.log(res));
+        .then(response=>{
+          window.localStorage.setItem('auth', response.headers.get('x-auth-token'));
+          return response.json()
+        })
+        .then(res=>{
+          console.log(res)
+          if(res.isAuthenticated){
+            setLogin(true);
+            setAdmin(res.isAdmin);
+            window.localStorage.setItem('admin', res.isAdmin);
+            navigate('/');
+          }else{
+            setLogin(false);
+          }
+        });
     } catch(err){
       console.log(err);
       return;
@@ -83,7 +99,7 @@ function SignIn(){
 
   return (
     <>
-      <NavigationBar/>
+      <NavigationBar isLoggedIn={isLoggedIn} setLogin={setLogin} isAdmin={isAdmin} />
       <div className="signin-form-container">
         <div id="signin-header">
           <LockOutlinedIcon className="lock-logo" fontSize="large" />
@@ -100,7 +116,6 @@ function SignIn(){
               error={formData.emailError}
               helperText={formData.emailHelperText}
               label="Email Address"
-              // InputLabelProps={{ shrink: true }}
             />
           </FormControl>
           <FormControl>
@@ -113,15 +128,14 @@ function SignIn(){
               error={formData.passwordError}
               helperText={formData.passwordHelperText}
               label="Password"
-              // InputLabelProps={{ shrink: true }}
             />
           </FormControl>
           <Button variant="contained" fullWidth type="submit" onClick={handleClick}>
             <Typography>SIGN IN</Typography>
           </Button>
-          <a href="#">
+          <Link to="/signup">
             <Typography component="p">Don't have an account? Sign Up</Typography>
-          </a>
+          </Link>
         </form>
         <div className="signin-footer">
           <Footer />

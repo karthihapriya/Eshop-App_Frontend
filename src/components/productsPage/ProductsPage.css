@@ -28,3 +28,31 @@
   margin-bottom : 2%;
   box-sizing : border-box;
 }
+
+#add-alert{
+  position: absolute;
+  top : 10%;
+  left : 75%;
+  z-index: 1000;
+}
+
+#edit-alert{
+  position: absolute;
+  top : 10%;
+  left : 75%;
+  z-index: 1000;
+}
+
+#delete-alert{
+  position: absolute;
+  top : 10%;
+  left : 75%;
+  z-index: 1000;
+}
+
+#order-alert{
+  position: absolute;
+  top : 10%;
+  left : 75%;
+  z-index: 1000;
+}

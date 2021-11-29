@@ -5,6 +5,7 @@ import { Button } from "@mui/material";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Footer from "../../common/footer/Footer";
 import "./SignUp.css";
+import {Link, useNavigate} from "react-router-dom";
 
 const SET_FIRSTNAME = "SET_FIRSTNAME";
 const SET_LASTNAME = "SET_LASTNAME";
@@ -58,8 +59,9 @@ const reducer = (state, action)=>{
   }
 }
 
-function SignUp(){
+function SignUp({isLoggedIn}){
 
+  const navigate = useNavigate();
   const [formData, dispatch] = useReducer(reducer, initialState);
 
   const requiredActionCreator=(type, isFilled)=>{
@@ -83,7 +85,7 @@ function SignUp(){
     }
   }
 
-  const handleClick=(event)=>{
+  const handleClick= async (event)=>{
     event.preventDefault();
     //test for empty fields
     if(!formData.firstName){
@@ -170,7 +172,11 @@ function SignUp(){
       try{
         fetch('http://localhost:8000/api/auth/signup', options)
           .then(response=>response.json())
-          .then(result=>console.log(result));
+          .then(result=>{
+            console.log(result)
+            alert("Please login");
+            navigate('/login');
+          });
       } catch(err){
         console.log(err);
         return;
@@ -180,7 +186,7 @@ function SignUp(){
 
   return (
     <>
-      <NavigationBar/>
+      <NavigationBar isLoggedIn={isLoggedIn} />
       <div className="form-container">
         <div id="signup-header">
           <LockOutlinedIcon className="lock-logo" fontSize="large" />
@@ -266,11 +272,11 @@ function SignUp(){
             />
           </FormControl>
           <Button variant="contained" fullWidth={true} type="submit" onClick={handleClick}>
-            <Typography>SIGN IN</Typography>
+            <Typography>SIGN UP</Typography>
           </Button>
-          <a href="#">
+          <Link to="/login">
             <Typography component="p" style={{textAlign : "right"}}>Already have an account? Sign In</Typography>
-          </a>
+          </Link>
         </form>
         <div className="signup-footer">
           <Footer />

@@ -13,18 +13,24 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import {Select, MenuItem, InputLabel} from "@mui/material"
+import {Select, MenuItem, InputLabel, Alert} from "@mui/material"
+import { Link, Routes, Route, useNavigate} from "react-router-dom";
+import DeleteDialog from "../deleteDialog/DeleteDialog";
 
-
-
-function ProductsPage({isAdmin}){
+function ProductsPage({isLoggedIn, isAdmin, setLogin, setAdmin, addAlert, editAlert, deleteAlert, orderAlert, handleAlert}){
   const [toggleValue, setToggleValue] = useState('All');
   const [selectValue, setSelectValue] = useState('default');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(['All']);
   const [name, setName] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
+  const navigate = useNavigate();
+  
   useEffect(()=>{
+    if(!isLoggedIn){
+      navigate('/login');
+    }
     const url = "http://localhost:8000/api/products/categories";
     fetch(url)
       .then(response=>response.json())
@@ -43,7 +49,11 @@ function ProductsPage({isAdmin}){
       break;
       default : return null;
     }
-  },[selectValue, toggleValue, name])
+  },[selectValue, toggleValue, name]);
+
+  if(!isLoggedIn){
+    navigate('/login');
+  }
 
   const handleSortFetch=(type, value, category, name)=>{
     let url = `http://localhost:8000/api/products?`;
@@ -69,17 +79,26 @@ function ProductsPage({isAdmin}){
     type === "toggle" ? setToggleValue(value) : setSelectValue(value);
   }
 
-  const handleClick=(id)=>{
-    const url = `http://localhost:8000/api/products/${id}`;
-    fetch(url)
-      .then(response=>response.json())
-      .then(res=>console.log(res));       
-  }
+  const handleDeleteOpen = (id) => {
+    sessionStorage.setItem('product', id);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteClose = () => {
+    setDeleteOpen(false);
+  };
+
+
+
 
   return(
     <>
-      <NavigationBar setSearchValue={setName} searchValue={name} />
+      <NavigationBar isLoggedIn={isLoggedIn} setSearchValue={setName} searchValue={name} setLogin={setLogin} isAdmin={isAdmin} setAdmin={setAdmin} />
         <div id="toggle-btn-container">
+          {addAlert && <Alert id="add-alert" onClose={() => handleAlert("add", false)}>Succesfully added the product !</Alert>}
+          {editAlert && <Alert id="edit-alert" onClose={() => handleAlert("edit", false)}>Succesfully edited the product !</Alert>}
+          {deleteAlert && <Alert id="delete-alert" onClose={() => handleAlert("delete", false)}>Succesfully deleted the product !</Alert>}
+          {orderAlert && <Alert id="order-alert" onClose={() => handleAlert("order", false)}>Succesfully ordered the product !</Alert>}
           <ToggleButtonGroup exclusive={true} value={toggleValue} onChange={e=>handleChange(e,"toggle")}>
             {categories.map(item=>(
               <ToggleButton key={item} value={item}>{item}</ToggleButton>
@@ -129,16 +148,19 @@ function ProductsPage({isAdmin}){
                   </CardContent>
                   <CardActions sx={{marginTop : "auto"}}>
                       <div className="btns-container">
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={()=>handleClick(item.productId)}
-                        >Buy
-                        </Button>
+                        <Link to={`/product/${item.productId}`}>
+                          <Button
+                            variant="contained"
+                            size="small"
+                          >Buy
+                          </Button>
+                        </Link>
                         {isAdmin && 
                         <ButtonGroup variant="string">
-                          <Button size="small"><EditIcon /></Button>
-                          <Button size="small"><DeleteIcon /></Button>
+                          <Link to={`/editProduct/${item.productId}`}>
+                            <Button size="small"><EditIcon /></Button>
+                          </Link>
+                            <Button size="small" onClick={(e)=>handleDeleteOpen(item.productId)}><DeleteIcon /></Button>
                         </ButtonGroup>}
                       </div>
                   </CardActions>
@@ -146,6 +168,7 @@ function ProductsPage({isAdmin}){
             </Grid>
           ))}
         </Grid>
+        <DeleteDialog open={deleteOpen} close={handleDeleteClose} />
     </>
   )
 }

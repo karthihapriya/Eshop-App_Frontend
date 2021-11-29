@@ -1,6 +1,14 @@
+#order-container{
+  margin-top : 8%;
+  box-sizing: border-box;
+  height : 100%;
+  padding: 0 4%;
+}
 #order-product-container{
   width : 100%;
+  height : 80%;
   display: flex;
+  box-sizing: border-box;
 }
 
 #order-product-image-container{
@@ -31,7 +39,8 @@
 }
 
 #order-product-name{
-  font-size : 65px;
+  font-size : 50px;
+  font-weight: 370;
 }
 
 #address-container{
@@ -72,3 +81,8 @@
   margin-bottom : 2%;
 }
 
+#stepper-btns{
+  /* background: brown; */
+  padding : 2% 0;
+  justify-content: center;
+}

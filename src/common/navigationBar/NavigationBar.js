@@ -7,6 +7,7 @@ import InputBase from '@mui/material/InputBase';
 import  SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { ButtonGroup } from '@mui/material';
+import {Link} from "react-router-dom";
 
 
 const Search = styled('div')(({ theme }) => ({
@@ -49,14 +50,20 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-function NavigationBar({searchValue, setSearchValue}){
-
-  const [login, setLogin] = useState(false);
-  const [admin, setAdmin] = useState(false);
+function NavigationBar({isLoggedIn, searchValue, setSearchValue, setLogin, isAdmin, setAdmin}){
 
   const handleChange=(event)=>{
     const {value} = event.target;
     setSearchValue(value);
+  }
+
+  const handleLogout=()=>{
+    setLogin(false);
+    if(isAdmin){
+      setAdmin(false);
+    }
+    localStorage.removeItem('auth');
+    localStorage.removeItem('admin');
   }
 
   return(
@@ -68,7 +75,7 @@ function NavigationBar({searchValue, setSearchValue}){
           upGrad E-Shop
         </Typography>
       </div>
-      <Search id="search-bar">
+      {isLoggedIn && <Search id="search-bar">
         <SearchIconWrapper>
           <SearchIcon />
         </SearchIconWrapper>
@@ -78,33 +85,44 @@ function NavigationBar({searchValue, setSearchValue}){
           value={searchValue}
           onChange={handleChange}
         />
-      </Search>
+      </Search>}
       <ButtonGroup>
-        <Button variant="string">
-          <Typography className="button-text">
-            Home
-          </Typography>
-        </Button>
-        {(admin && login) && <Button variant="string">
-          <Typography className="button-text">
-            Add Product
-          </Typography>
-        </Button>}
-        {!login && 
+        {isLoggedIn && 
+          <Link to="/">
+            <Button variant="string">
+              <Typography className="button-text">
+                Home
+              </Typography>
+            </Button>
+          </Link>}
+        {(isAdmin && isLoggedIn) && 
+          <Link to="/addproduct">
+            <Button variant="string">
+              <Typography className="button-text">
+                  Add Product
+              </Typography>
+            </Button>
+          </Link>}
+        {!isLoggedIn && 
           <div>
-          <Button variant="string">
-            <Typography className="button-text">
-              Login
-            </Typography>
-          </Button>
-          <Button variant="string">
-            <Typography className="button-text">
-              SignUp
-            </Typography>
-          </Button>
+            <Link to="/login">
+              <Button variant="string">
+                <Typography className="button-text">
+                  Login
+                </Typography>
+              </Button>
+            </Link>
+            <Link to="/signup" >
+              <Button variant="string">
+                <Typography className="button-text">
+                  SignUp
+                </Typography>
+              </Button>
+            </Link>
           </div>
         }
-        {login && <Button variant="contained" color="error">
+        {isLoggedIn && 
+        <Button variant="contained" color="error" onClick={handleLogout}>
           <Typography>
             Logout
           </Typography>

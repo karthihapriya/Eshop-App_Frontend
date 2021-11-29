@@ -1,4 +1,4 @@
-import React, {useState, useReducer} from "react";
+import React, {useState, useReducer, useEffect} from "react";
 import Box from '@mui/material/Box';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
@@ -8,6 +8,9 @@ import Typography from '@mui/material/Typography';
 import {InputLabel, MenuItem, Select, OutlinedInput, FormControl, TextField} from '@mui/material';
 import ConfirmPage from "../confirmPage/ConfirmPage";
 import "./OrderPage.css"
+import {useParams, useLocation, useNavigate} from 'react-router-dom';
+import NavigationBar from "../../common/navigationBar/NavigationBar";
+
 
 const ADD_NAME = "ADD_NAME";
 const ADD_CONTACT_NUMBER = "ADD_CONTACT_NUMBER";
@@ -70,17 +73,34 @@ const reducer = (state, action)=>{
   }
 }
 
-function OrderPage({product, quantity}){
+function OrderPage({isLoggedIn, setLogin, isAdmin, setAdmin, handleAlert}){
   const [activeStep, setActiveStep] = useState(0);
   const [skipped, setSkipped] = useState(new Set());
   const [address, setAddress] = useState("");
   const [addressData, dispatch] = useReducer(reducer, initialAddress);
-  const [addressValid, setAddressValid] = useState(false);
+  const [product, setProduct] = useState([]);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [addressId, setAddressId] = useState("");
+  const [userId, setUserId] = useState("");
+  
+  const {id} = useParams();
+  const location = useLocation();
+  const quantity = parseInt(location.search.split("=")[1]);
 
-  const isStepOptional = (step) => {
-    return step === 1;
-  };
-
+  const navigate = useNavigate();
+  
+  useEffect(()=>{
+    const url = `http://localhost:8000/api/products/${id}`;
+    fetch(url)
+    .then(response=>response.json())
+    .then(res=>setProduct(res));
+  }, [])
+  
+  
+  if(!isLoggedIn){
+    navigate('/login')
+  }
+  
   const isStepSkipped = (step) => {
     return skipped.has(step);
   };
@@ -91,6 +111,36 @@ function OrderPage({product, quantity}){
         alert("PLease select address");
         return;
       }
+    }
+    if(activeStep === steps.length -1){
+      const url = 'http://localhost:8000/api/orders';
+      const data = {
+        productId : localStorage.getItem('productId'),
+        addressId : address.id,
+        quantity
+      }
+      const options = {
+        method : 'POST',
+        headers : {
+          'Content-Type' : "application/json",
+          'x-auth-token' : window.localStorage.getItem('auth')
+        },
+        body : JSON.stringify(data)
+      }
+      fetch(url, options)
+        .then(response=>{
+          if(response.status === 201){
+            return response.json();
+          }
+          return null;
+        })
+        .then(res=>{
+          if(res){
+            handleAlert('order', true);
+            console.log("all fine with res");
+          }
+        });
+        
     }
     let newSkipped = skipped;
     if (isStepSkipped(activeStep)) {
@@ -130,11 +180,7 @@ function OrderPage({product, quantity}){
 
   };
 
-  const handleReset = () => {
-    setActiveStep(0);
-  };
-
-  const handleClick=(event)=>{
+  const handleClick=async (event)=>{
     event.preventDefault();
     //check for name
     const nameRegex = /^[^\d]+$/;
@@ -181,13 +227,6 @@ function OrderPage({product, quantity}){
     } else{
       dispatch({type : SET_STATE_ERROR, value : false, text : ""});
     }
-    //check for landmark
-    // if(!addressData.landmark){
-    //   dispatch({type : SET_LANDMARK_ERROR, value : true, text : "Please enter your landmark"});
-    //   return;
-    // } else{
-    //   dispatch({type : SET_LANDMARK_ERROR, value : false, text : ""});
-    // }
     //check for zipcode
     if(!addressData.zipcode){
       dispatch({type : SET_ZIPCODE_ERROR, value : true, text : "Please enter your zipcode"});
@@ -195,11 +234,44 @@ function OrderPage({product, quantity}){
     } else{
       dispatch({type : SET_ZIPCODE_ERROR, value : false, text : ""});
     }
-    setAddressValid(true);
+    const url = "http://localhost:8000/api/addresses"
+    const data = {
+      name : addressData.name,
+      contactNumber : addressData.contactNumber,
+      street : addressData.street,
+      city : addressData.city,
+      state : addressData.state,
+      landmark : addressData.landmark,
+      zipcode : addressData.zipcode
+    };
+    const options = {
+      method : "POST",
+      headers : {
+        "Content-Type" : "application/json",
+        'x-auth-token' : window.localStorage.getItem('auth')
+      },
+      body : JSON.stringify(data)
+    };
+    
+    const newAddress = {...data};
+    
+    await fetch(url, options)
+      .then(response=>response.json())
+      .then(res=>{
+        console.log("res ",res);
+        console.log("res._id ",res.address._id);
+        // setAddressId(res._id);
+        newAddress.id = res.address._id;
+      });
+      debugger;
+    console.log("new address : ", newAddress);
+    setSavedAddresses([...savedAddresses, newAddress]);
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <>
+    <NavigationBar isLoggedIn={isLoggedIn} setLogin={setLogin} isAdmin={isAdmin} setAdmin={setAdmin} />
+    <Box sx={{ width: '100%' }} id="order-container">
       <Stepper activeStep={activeStep}>
         {steps.map((label, index) => {
           const stepProps = {};
@@ -216,29 +288,23 @@ function OrderPage({product, quantity}){
       </Stepper>
       {activeStep === steps.length ? (
         <>
-          <Typography sx={{ mt: 2, mb: 1 }}>
-            All steps completed - you&apos;re finished
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-            <Box sx={{ flex: '1 1 auto' }} />
-            <Button onClick={handleReset}>Reset</Button>
-          </Box>
+          {navigate('/')}
         </>
       ) : (
         <>
           {activeStep === 0 &&
           <div id="order-product-container">
             <div id="order-product-image-container">
-              <img id="order-product-image" src={product[1].imageURL}/>
+              <img id="order-product-image" src={product.imageURL}/>
             </div>
             <div id="order-product-details">
               <div id="order-details-header">
-                <Typography component="h1" variant="h1" id="order-product-name">{product[1].name}</Typography>
+                <Typography component="h1" variant="h1" id="order-product-name">{product.name}</Typography>
               </div>
               <Typography>Quantity : <b>{quantity}</b></Typography>
-              <Typography>Category : <b>{product[1].category}</b></Typography>
-              <Typography className="italic">{product[1].description}</Typography>
-              <Typography className="price">{product[1].price * quantity}</Typography>
+              <Typography>Category : <b>{product.category}</b></Typography>
+              <Typography className="italic">{product.description}</Typography>
+              <Typography className="price">{product.price * quantity}</Typography>
             </div>
           </div>}
           {activeStep === 1 &&
@@ -255,7 +321,9 @@ function OrderPage({product, quantity}){
                     'name' : "address-select"
                   }}
                 >
-                  <MenuItem value="default">My address</MenuItem>
+                  {savedAddresses.map((item, index)=>{
+                    return <MenuItem key={item+index} value={item}>{`${item.name}...${item.city} -> ${item.state}`}</MenuItem>
+                  })}
                 </Select>
               </div>
               <Typography>-- OR --</Typography>
@@ -348,24 +416,23 @@ function OrderPage({product, quantity}){
               </form>
             </div>
           </div>}
-          {activeStep === 2 && <ConfirmPage product={product} quantity={quantity} address={address} />}
-          <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
+          {activeStep === 2 && <ConfirmPage product={product} quantity={quantity} address={JSON.stringify(address)} />}
+          <Box id="stepper-btns" sx={{ display: 'flex', flexDirection: 'row' }}>
             <Button
               color="inherit"
               disabled={activeStep === 0}
               onClick={handleBack}
-              sx={{ mr: 1 }}
             >
               Back
             </Button>
-            <Box sx={{ flex: '1 1 auto' }} />
-            <Button onClick={handleNext}>
-              {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+            <Button variant="contained" onClick={handleNext}>
+              {activeStep === steps.length - 1 ? 'Place Order' : 'Next'}
             </Button>
           </Box>
         </>
       )}
     </Box>
+    </>
   );
 }
 
