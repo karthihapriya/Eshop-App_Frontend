@@ -1,9 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import NavigationBar from "./common/navigationBar/NavigationBar";
 
 
 ReactDOM.render(
-  <div>START</div>,
+  <NavigationBar />,
   document.getElementById('root')
 );
