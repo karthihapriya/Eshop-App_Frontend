@@ -15,11 +15,14 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import {Select, MenuItem, InputLabel} from "@mui/material"
 
+
+
 function ProductsPage({isAdmin}){
   const [toggleValue, setToggleValue] = useState('All');
   const [selectValue, setSelectValue] = useState('default');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(['All']);
+  const [name, setName] = useState("");
 
   useEffect(()=>{
     const url = "http://localhost:8000/api/products/categories";
@@ -30,37 +33,33 @@ function ProductsPage({isAdmin}){
 
   useEffect(()=>{
     switch(selectValue){
-      case "price-ltoh" : handleSortFetch("price", "ASC");
+      case "price-ltoh" : handleSortFetch("price", "ASC", toggleValue, name);
       break;
-      case "price-htol" : handleSortFetch("price", "DESC");
+      case "price-htol" : handleSortFetch("price", "DESC", toggleValue, name);
       break;
-      case "default" : handleSortFetch(null, null);
+      case "default" : handleSortFetch(null, null, toggleValue, name);
       break;
-      case "newest" : handleSortFetch("createdAt", "DESC");
+      case "newest" : handleSortFetch("createdAt", "DESC", toggleValue, name);
       break;
       default : return null;
     }
-  },[selectValue])
+  },[selectValue, toggleValue, name])
 
-  useEffect(()=>{
-    toggleValue === "All" ? handleCategoryFetch(null) : handleCategoryFetch(toggleValue);
-  }, [toggleValue])
-
-  const handleSortFetch=(type, value)=>{
-    const url = `http://localhost:8000/api/products`;
-    let urlToSend = type ? `${url}?sortBy=${type}&direction=${value}` : url;
-    if(toggleValue !== "All"){
-      urlToSend = type ? `${url}?category=${toggleValue}&sortBy=${type}&direction=${value}` : url;
+  const handleSortFetch=(type, value, category, name)=>{
+    let url = `http://localhost:8000/api/products?`;
+    if(name){
+      url += `&name=${name}`;
     }
-    fetch(urlToSend)
-      .then(response=>response.json())
-      .then(res=>setProducts(res.content));
-  }
-
-  const handleCategoryFetch=(category)=>{
-    const url = `http://localhost:8000/api/products`;
-    const urlToSend = category ? `${url}?category=${category}` : url;
-    fetch(urlToSend)
+    if(type){
+      url += `&sortBy=${type}&direction=${value}`
+    }
+    if(category){
+      if(category !== 'All'){
+        url += `&category=${toggleValue}`;
+      }
+    }
+    console.log(url);
+    fetch(url)
       .then(response=>response.json())
       .then(res=>setProducts(res.content));
   }
@@ -70,9 +69,16 @@ function ProductsPage({isAdmin}){
     type === "toggle" ? setToggleValue(value) : setSelectValue(value);
   }
 
+  const handleClick=(id)=>{
+    const url = `http://localhost:8000/api/products/${id}`;
+    fetch(url)
+      .then(response=>response.json())
+      .then(res=>console.log(res));       
+  }
+
   return(
     <>
-      <NavigationBar />
+      <NavigationBar setSearchValue={setName} searchValue={name} />
         <div id="toggle-btn-container">
           <ToggleButtonGroup exclusive={true} value={toggleValue} onChange={e=>handleChange(e,"toggle")}>
             {categories.map(item=>(
@@ -98,7 +104,7 @@ function ProductsPage({isAdmin}){
         </div>
         <Grid id="grid-container" container columns={8} columnSpacing={5} rowSpacing={5}>
           {products.map(item=>(
-            <Grid item lg={2} md={2} xs={2} sx={{display : "flex"}} >
+            <Grid key={item.productId} item lg={2} md={2} xs={2} sx={{display : "flex"}} >
                 <Card sx={{display: 'flex', flexDirection: 'column'}}>
                   <div>
                   <CardMedia
@@ -123,7 +129,12 @@ function ProductsPage({isAdmin}){
                   </CardContent>
                   <CardActions sx={{marginTop : "auto"}}>
                       <div className="btns-container">
-                        <Button variant="contained" size="small">Buy</Button>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={()=>handleClick(item.productId)}
+                        >Buy
+                        </Button>
                         {isAdmin && 
                         <ButtonGroup variant="string">
                           <Button size="small"><EditIcon /></Button>
