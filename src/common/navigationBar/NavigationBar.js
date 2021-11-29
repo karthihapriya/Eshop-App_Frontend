@@ -83,7 +83,7 @@ function NavigationBar(){
           </Typography>
         </Button>}
         {!login && 
-          <>
+          <div>
           <Button variant="string">
             <Typography className="button-text">
               Login
@@ -94,7 +94,7 @@ function NavigationBar(){
               SignUp
             </Typography>
           </Button>
-          </>
+          </div>
         }
         {login && <Button variant="contained" color="error">
           <Typography>

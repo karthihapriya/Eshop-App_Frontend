@@ -43,15 +43,53 @@ function SignIn(){
     }
   }
 
+  const handleClick=(event)=>{
+    event.preventDefault();
+    if(formData.email.length === 0){
+      dispatch({type : SET_EMAIL_ERROR, value : true, text : "Required"});
+      return;
+    }
+    if(formData.password.length === 0){
+      dispatch({type : SET_PASSWORD_ERROR, value : true, text : "Required"});
+      return;
+    }
+    const emailRegex = /^[A-Za-z0-9\._\-]{1,}@[A-Za-z0-9\._\-]{1,}\.[a-z]{2,6}$/;
+    if(!emailRegex.test(formData.email)){
+      dispatch({type : SET_EMAIL_ERROR, value : true, text : "Please enter a valid email address"});
+      return;
+    }
+    dispatch({type : SET_EMAIL_ERROR, value : false, text : ""});
+    dispatch({type : SET_PASSWORD_ERROR, value : false, text : ""});
+    const data = {
+      email : formData.email,
+      password : formData.password
+    }
+    const options = {
+      method : "POST",
+      headers : {
+        "Content-Type" : "application/json"
+      },
+      body : JSON.stringify(data)
+    }
+    try{
+      fetch('http://localhost:8000/api/auth/login', options)
+        .then(response=>response.json())
+        .then(res=>console.log(res));
+    } catch(err){
+      console.log(err);
+      return;
+    }
+  }
+
   return (
     <>
       <NavigationBar/>
-      <div className="form-container">
+      <div className="signin-form-container">
         <div id="signin-header">
-          <LockOutlinedIcon id="lock-logo" fontSize="large" />
+          <LockOutlinedIcon className="lock-logo" fontSize="large" />
           <Typography component="h4" variant="h4">Sign in</Typography>
         </div>
-        <form>
+        <form id="signin-form">
           <FormControl>
             <TextField
               required
@@ -62,7 +100,7 @@ function SignIn(){
               error={formData.emailError}
               helperText={formData.emailHelperText}
               label="Email Address"
-              InputLabelProps={{ shrink: true }}
+              // InputLabelProps={{ shrink: true }}
             />
           </FormControl>
           <FormControl>
@@ -75,17 +113,17 @@ function SignIn(){
               error={formData.passwordError}
               helperText={formData.passwordHelperText}
               label="Password"
-              InputLabelProps={{ shrink: true }}
+              // InputLabelProps={{ shrink: true }}
             />
           </FormControl>
-          <Button variant="contained" fullWidth type="submit">
+          <Button variant="contained" fullWidth type="submit" onClick={handleClick}>
             <Typography>SIGN IN</Typography>
           </Button>
           <a href="#">
             <Typography component="p">Don't have an account? Sign Up</Typography>
           </a>
         </form>
-        <div id="footer">
+        <div className="signin-footer">
           <Footer />
         </div>
       </div>

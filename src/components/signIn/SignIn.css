@@ -1,4 +1,4 @@
-.form-container{
+.signin-form-container{
   display: flex;
   align-items: center;
   width: 100%;
@@ -9,7 +9,7 @@
   flex-direction: column;
 }
 
-form {
+#signin-form {
   display : flex;
   flex-direction: column;
   width : 30%;
@@ -28,7 +28,7 @@ a{
   align-items: center;
 }
 
-#lock-logo{
+.lock-logo{
   background-color: rgb(255, 17, 148);
   color: white;
   padding : 4%;
@@ -36,6 +36,6 @@ a{
   box-sizing: border-box;
 }
 
-#footer{
+.signin-footer{
   margin-top: 4%;
 }
