@@ -6,6 +6,7 @@ import StepLabel from '@mui/material/StepLabel';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {InputLabel, MenuItem, Select, OutlinedInput, FormControl, TextField} from '@mui/material';
+import ConfirmPage from "../confirmPage/ConfirmPage";
 import "./OrderPage.css"
 
 const ADD_NAME = "ADD_NAME";
@@ -346,8 +347,8 @@ function OrderPage({product, quantity}){
                 <Button type="submit" onClick={handleClick} fullWidth variant="contained">SAVE ADDRESS</Button>
               </form>
             </div>
-          </div>
-          }
+          </div>}
+          {activeStep === 2 && <ConfirmPage product={product} quantity={quantity} address={address} />}
           <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
             <Button
               color="inherit"
