@@ -20,7 +20,6 @@ function ProductsPage({isAdmin}){
   const [selectValue, setSelectValue] = useState('default');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(['All']);
-  const [name, setName] = useState("");
 
   useEffect(()=>{
     const url = "http://localhost:8000/api/products/categories";
@@ -31,33 +30,37 @@ function ProductsPage({isAdmin}){
 
   useEffect(()=>{
     switch(selectValue){
-      case "price-ltoh" : handleSortFetch("price", "ASC", toggleValue, name);
+      case "price-ltoh" : handleSortFetch("price", "ASC");
       break;
-      case "price-htol" : handleSortFetch("price", "DESC", toggleValue, name);
+      case "price-htol" : handleSortFetch("price", "DESC");
       break;
-      case "default" : handleSortFetch(null, null, toggleValue, name);
+      case "default" : handleSortFetch(null, null);
       break;
-      case "newest" : handleSortFetch("createdAt", "DESC", toggleValue, name);
+      case "newest" : handleSortFetch("createdAt", "DESC");
       break;
       default : return null;
     }
-  },[selectValue, toggleValue, name])
+  },[selectValue])
 
-  const handleSortFetch=(type, value, category, name)=>{
-    let url = `http://localhost:8000/api/products?`;
-    if(name){
-      url += `&name=${name}`;
+  useEffect(()=>{
+    toggleValue === "All" ? handleCategoryFetch(null) : handleCategoryFetch(toggleValue);
+  }, [toggleValue])
+
+  const handleSortFetch=(type, value)=>{
+    const url = `http://localhost:8000/api/products`;
+    let urlToSend = type ? `${url}?sortBy=${type}&direction=${value}` : url;
+    if(toggleValue !== "All"){
+      urlToSend = type ? `${url}?category=${toggleValue}&sortBy=${type}&direction=${value}` : url;
     }
-    if(type){
-      url += `&sortBy=${type}&direction=${value}`
-    }
-    if(category){
-      if(category !== 'All'){
-        url += `&category=${toggleValue}`;
-      }
-    }
-    console.log(url);
-    fetch(url)
+    fetch(urlToSend)
+      .then(response=>response.json())
+      .then(res=>setProducts(res.content));
+  }
+
+  const handleCategoryFetch=(category)=>{
+    const url = `http://localhost:8000/api/products`;
+    const urlToSend = category ? `${url}?category=${category}` : url;
+    fetch(urlToSend)
       .then(response=>response.json())
       .then(res=>setProducts(res.content));
   }
@@ -69,7 +72,7 @@ function ProductsPage({isAdmin}){
 
   return(
     <>
-      <NavigationBar setSearchValue={setName} searchValue={name} />
+      <NavigationBar />
         <div id="toggle-btn-container">
           <ToggleButtonGroup exclusive={true} value={toggleValue} onChange={e=>handleChange(e,"toggle")}>
             {categories.map(item=>(
@@ -111,7 +114,7 @@ function ProductsPage({isAdmin}){
                         {item.name}
                       </Typography>
                       <Typography gutterBottom variant="h5" component="div">
-                        {`Rs ${item.price}`}
+                        <>&#8377;</>{`${item.price}`}
                       </Typography>
                     </div>
                     <Typography variant="body2" color="text.secondary">
