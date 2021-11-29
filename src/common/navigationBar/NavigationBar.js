@@ -54,7 +54,7 @@ function NavigationBar(){
   const [login, setLogin] = useState(false);
   const [admin, setAdmin] = useState(false);
   return(
-  <AppBar position="static" color="primary">
+  <AppBar position="fixed" color="primary">
     <Toolbar className="toolBar">
       <div id="logo">
         <ShoppingCartIcon />
