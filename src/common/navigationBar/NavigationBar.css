@@ -7,7 +7,7 @@
 
 #logo{
   display: flex;
-  flex-basis : 12%;
+  flex-basis:content;
   justify-content: space-between;
 }
 
