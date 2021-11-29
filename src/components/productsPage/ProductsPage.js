@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import NavigationBar from "../../common/navigationBar/NavigationBar";
 import Card from '@mui/material/Card';
 import CardMedia from '@mui/material/CardMedia';
@@ -11,13 +11,88 @@ import Grid from '@mui/material/Grid';
 import "./ProductsPage.css";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import products from '../../assets/products.json';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import {Select, MenuItem, InputLabel} from "@mui/material"
 
 function ProductsPage({isAdmin}){
-  console.log(isAdmin);
+  const [toggleValue, setToggleValue] = useState('All');
+  const [selectValue, setSelectValue] = useState('default');
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(['All']);
+  const [name, setName] = useState("");
+
+  useEffect(()=>{
+    const url = "http://localhost:8000/api/products/categories";
+    fetch(url)
+      .then(response=>response.json())
+      .then(res=>setCategories([...categories, ...res]));
+  }, [])
+
+  useEffect(()=>{
+    switch(selectValue){
+      case "price-ltoh" : handleSortFetch("price", "ASC", toggleValue, name);
+      break;
+      case "price-htol" : handleSortFetch("price", "DESC", toggleValue, name);
+      break;
+      case "default" : handleSortFetch(null, null, toggleValue, name);
+      break;
+      case "newest" : handleSortFetch("createdAt", "DESC", toggleValue, name);
+      break;
+      default : return null;
+    }
+  },[selectValue, toggleValue, name])
+
+  const handleSortFetch=(type, value, category, name)=>{
+    let url = `http://localhost:8000/api/products?`;
+    if(name){
+      url += `&name=${name}`;
+    }
+    if(type){
+      url += `&sortBy=${type}&direction=${value}`
+    }
+    if(category){
+      if(category !== 'All'){
+        url += `&category=${toggleValue}`;
+      }
+    }
+    console.log(url);
+    fetch(url)
+      .then(response=>response.json())
+      .then(res=>setProducts(res.content));
+  }
+
+  const handleChange=(event, type)=>{
+    const {value} = event.target;
+    type === "toggle" ? setToggleValue(value) : setSelectValue(value);
+  }
+
   return(
     <>
-      <NavigationBar />
+      <NavigationBar setSearchValue={setName} searchValue={name} />
+        <div id="toggle-btn-container">
+          <ToggleButtonGroup exclusive={true} value={toggleValue} onChange={e=>handleChange(e,"toggle")}>
+            {categories.map(item=>(
+              <ToggleButton key={item} value={item}>{item}</ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </div>
+        <div id="select-container">
+          <InputLabel htmlFor="select-input" sx={{fontWeight : 500}}>Sort By : </InputLabel>
+          <Select
+            sx={{width : "20%"}}
+            onChange={e=>handleChange(e,"select")}
+            value={selectValue}
+            inputProps={{
+              'id' : "select-input"
+            }}
+          >
+            <MenuItem value="default">Default</MenuItem>
+            <MenuItem value="price-htol">Price : High to Low</MenuItem>
+            <MenuItem value="price-ltoh">Price : Low to High</MenuItem>
+            <MenuItem value="newest">Price : Newest</MenuItem>
+          </Select>
+        </div>
         <Grid id="grid-container" container columns={8} columnSpacing={5} rowSpacing={5}>
           {products.map(item=>(
             <Grid item lg={2} md={2} xs={2} sx={{display : "flex"}} >

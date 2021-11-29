@@ -49,10 +49,16 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-function NavigationBar(){
+function NavigationBar({searchValue, setSearchValue}){
 
   const [login, setLogin] = useState(false);
   const [admin, setAdmin] = useState(false);
+
+  const handleChange=(event)=>{
+    const {value} = event.target;
+    setSearchValue(value);
+  }
+
   return(
   <AppBar position="fixed" color="primary">
     <Toolbar className="toolBar">
@@ -69,6 +75,8 @@ function NavigationBar(){
         <StyledInputBase
           placeholder="Search…"
           inputProps={{ 'aria-label': 'search' }}
+          value={searchValue}
+          onChange={handleChange}
         />
       </Search>
       <ButtonGroup>
